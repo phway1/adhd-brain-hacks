@@ -1,0 +1,16 @@
+{
+  "name": "ADHD Brain Hacks",
+  "short_name": "BrainHacks",
+  "start_url": "/adhd-brain-hacks/",
+  "display": "standalone",
+  "background_color": "#13171B",
+  "theme_color": "#13171B",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3079/3079165.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
