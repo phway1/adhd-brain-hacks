@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TidyBite — Neurodivergent-Friendly Micro-Cleaning</title>
+  <style>
+    :root {
+      /* Color Palette - High Contrast WCAG AAA on Dark Slate */
+      --bg-base: #13171B;
+      --bg-surface: #1E242B;
+      --bg-surface-hover: #262E37;
+      --bg-surface-active: #2E3742;
+      --border-subtle: #2F3842;
+      --border-focus: #80E5B6;
+
+      --text-primary: #F4F7FA;
+      --text-secondary: #C4CED9;
+      --text-muted: #93A1B0;
+
+      /* Accents */
+      --accent-sage: #4EBA87;
+      --accent-sage-bright: #62D49E;
+      --accent-sage-dark: #0D281B;
+      --accent-amber: #E5A93C;
+      --accent-amber-bright: #F4BD56;
+      --accent-amber-dark: #2A1D05;
+
+      /* Layout & Ergonomics */
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-pill: 9999px;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --transition-calm: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Main Container */
+    .app-shell {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Screen Visibility Management */
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn var(--transition-calm);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen { animation: none; }
+      * { transition: none !important; }
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--text-primary);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-top: 6px;
+    }
+
+    /* Brand Bar */
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--accent-sage-bright);
+      letter-spacing: 0.02em;
+    }
+
+    .brand-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--accent-sage);
+      box-shadow: 0 0 12px var(--accent-sage);
+    }
+
+    /* Tactile Buttons & Cards (>56px height) */
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      text-align: left;
+      transition: transform 120ms ease, background-color var(--transition-calm), border-color var(--transition-calm), box-shadow var(--transition-calm);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--border-focus);
+      outline-offset: 3px;
+    }
+
+    button:active {
+      transform: scale(0.985);
+    }
+
+    /* Mode Selector Cards (State 1) */
+    .mode-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mode-card {
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      min-height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .mode-card:hover {
+      background-color: var(--bg-surface-hover);
+      border-color: var(--accent-sage);
+    }
+
+    .mode-card-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .mode-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background-color: rgba(78, 186, 135, 0.14);
+      border: 1px solid rgba(78, 186, 135, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .mode-card[data-accent="amber"] .mode-icon {
+      background-color: rgba(229, 169, 60, 0.14);
+      border-color: rgba(229, 169, 60, 0.35);
+    }
+
+    .mode-card[data-accent="amber"]:hover {
+      border-color: var(--accent-amber);
+    }
+
+    .mode-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: block;
+    }
+
+    .mode-desc {
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .mode-arrow {
+      font-size: 1.4rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* Action Buttons */
+    .btn {
+      min-height: 62px;
+      padding: 16px 24px;
+      border-radius: var(--radius-lg);
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-sage);
+      color: var(--accent-sage-dark);
+      box-shadow: 0 6px 20px rgba(78, 186, 135, 0.22);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-sage-bright);
+    }
+
+    .btn-amber {
+      background-color: var(--accent-amber);
+      color: var(--accent-amber-dark);
+      box-shadow: 0 6px 20px rgba(229, 169, 60, 0.2);
+    }
+
+    .btn-amber:hover {
+      background-color: var(--accent-amber-bright);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      border: 2px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-surface-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn-doom {
+      background-color: rgba(229, 169, 60, 0.12);
+      color: var(--accent-amber-bright);
+      border: 2px solid rgba(229, 169, 60, 0.45);
+      margin-top: 4px;
+    }
+
+    .btn-doom:hover {
+      background-color: rgba(229, 169, 60, 0.2);
+      border-color: var(--accent-amber-bright);
+    }
+
+    .btn-ghost {
+      min-height: 56px;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background-color: transparent;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-surface);
+      border-color: var(--border-subtle);
+    }
+
+    /* State 2 & 3 Top Progress Bar */
+    .session-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .step-pill {
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* Timer Ring */
+    .timer-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0;
+      position: relative;
+    }
+
+    .timer-svg {
+      width: 176px;
+      height: 176px;
+      transform: rotate(-90deg);
+    }
+
+    .timer-track {
+      fill: none;
+      stroke: var(--bg-surface);
+      stroke-width: 10;
+    }
+
+    .timer-progress {
+      fill: none;
+      stroke: var(--accent-sage);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 471.24; /* 2 * PI * 75 */
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.5s linear, stroke 0.3s ease;
+    }
+
+    .timer-readout {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .timer-digits {
+      font-size: 2.35rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .timer-sub {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Atomic Micro-Action Card */
+    .task-card {
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      text-align: center;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .task-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-amber-bright);
+      background-color: rgba(229, 169, 60, 0.14);
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+    }
+
+    .task-prompt {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.35;
+      max-width: 22ch;
+    }
+
+    /* Audio Focus Bar */
+    .utility-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .audio-toggle {
+      flex: 1;
+      min-height: 58px;
+      background-color: var(--bg-surface);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .audio-toggle:hover {
+      background-color: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+
+    .audio-toggle[aria-pressed="true"] {
+      border-color: var(--accent-amber);
+      background-color: rgba(229, 169, 60, 0.12);
+      color: var(--text-primary);
+    }
+
+    .status-badge {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-base);
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    .audio-toggle[aria-pressed="true"] .status-badge {
+      background-color: var(--accent-amber);
+      color: var(--accent-amber-dark);
+    }
+
+    /* Doom Pile Progress Dots */
+    .wizard-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    .wizard-dot {
+      height: 10px;
+      flex: 1;
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      transition: background-color var(--transition-calm);
+    }
+
+    .wizard-dot.completed {
+      background-color: var(--accent-sage);
+      border-color: var(--accent-sage);
+    }
+
+    .wizard-dot.current {
+      background-color: var(--accent-amber);
+      border-color: var(--accent-amber);
+    }
+
+    /* Completion Screen Card (State 4) */
+    .completion-hero {
+      background-color: var(--bg-surface);
+      border: 2px solid var(--accent-sage);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sparkle-badge {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background-color: rgba(78, 186, 135, 0.16);
+      border: 2px solid var(--accent-sage);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .stats-box {
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      width: 100%;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-amber-bright);
+    }
+
+    .affirmation-text {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .rest-toast {
+      display: none;
+      background-color: rgba(78, 186, 135, 0.15);
+      border: 2px solid var(--accent-sage);
+      color: var(--text-primary);
+      padding: 18px 20px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .rest-toast.visible {
+      display: block;
+      animation: fadeIn var(--transition-calm);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="app-shell" aria-live="polite">
+
+    <!-- ==========================================
+         STATE 1: THE BANDWIDTH GATE
+         ========================================== -->
+    <section id="screen-gate" class="screen active" aria-labelledby="gate-heading">
+      <div class="brand-bar">
+        <span class="brand-logo">
+          <span class="brand-dot" aria-hidden="true"></span>
+          TidyBite
+        </span>
+      </div>
+
+      <header>
+        <h1 id="gate-heading">How much fuel do you have right now?</h1>
+        <p class="subtitle">No pressure. Baseline is enough.</p>
+      </header>
+
+      <div class="mode-stack" role="group" aria-label="Energy level modes">
+        <button type="button" class="mode-card" onclick="app.startSession('zombie')">
+          <div class="mode-card-left">
+            <div class="mode-icon" aria-hidden="true">🧟</div>
+            <div>
+              <span class="mode-title">2-Min Zombie Mode</span>
+              <span class="mode-desc">Just trash &amp; stray mugs</span>
+            </div>
+          </div>
+          <span class="mode-arrow" aria-hidden="true">→</span>
+        </button>
+
+        <button type="button" class="mode-card" data-accent="amber" onclick="app.startSession('sprint')">
+          <div class="mode-card-left">
+            <div class="mode-icon" aria-hidden="true">⚡</div>
+            <div>
+              <span class="mode-title">5-Min Quick Sprint</span>
+              <span class="mode-desc">Clear 1 flat surface</span>
+            </div>
+          </div>
+          <span class="mode-arrow" aria-hidden="true">→</span>
+        </button>
+
+        <button type="button" class="mode-card" onclick="app.startSession('momentum')">
+          <div class="mode-card-left">
+            <div class="mode-icon" aria-hidden="true">🌱</div>
+            <div>
+              <span class="mode-title">10-Min Momentum</span>
+              <span class="mode-desc">Restore room baseline</span>
+            </div>
+          </div>
+          <span class="mode-arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-doom" onclick="app.startDoomWizard()">
+        <span aria-hidden="true">📦</span>
+        <span>Snap &amp; Sort a Doom Pile</span>
+      </button>
+    </section>
+
+
+    <!-- ==========================================
+         STATE 2: TUNNEL VISION (MICRO-TASK SESSION)
+         ========================================== -->
+    <section id="screen-tunnel" class="screen" aria-labelledby="tunnel-step-indicator">
+      <div class="session-topbar">
+        <span id="tunnel-step-indicator" class="step-pill">Step 1 of 3</span>
+        <button type="button" class="btn-ghost" onclick="app.finishEarly()" title="Stopping early is always a valid win">
+          <span>Stop &amp; Rest</span>
+        </button>
+      </div>
+
+      <div class="timer-wrapper">
+        <svg class="timer-svg" viewBox="0 0 176 176" aria-hidden="true">
+          <circle class="timer-track" cx="88" cy="88" r="75"></circle>
+          <circle id="timer-ring" class="timer-progress" cx="88" cy="88" r="75"></circle>
+        </svg>
+        <div class="timer-readout">
+          <span id="timer-display" class="timer-digits" aria-label="Time remaining">02:00</span>
+          <span id="timer-label" class="timer-sub">Gentle Pace</span>
+        </div>
+      </div>
+
+      <article class="task-card" aria-live="assertive">
+        <span id="tunnel-mode-tag" class="task-tag">Micro-Action</span>
+        <p id="tunnel-task-text" class="task-prompt">Toss 3 trash items into a bag.</p>
+      </article>
+
+      <button type="button" class="btn btn-primary" onclick="app.completeMicroTask()">
+        <span>✓ Done! Next Step</span>
+      </button>
+
+      <button type="button" class="btn btn-secondary" onclick="app.swapMicroTask()">
+        <span>Can't do this? Swap task</span>
+      </button>
+
+      <div class="utility-row">
+        <button
+          type="button"
+          id="brown-noise-btn-tunnel"
+          class="audio-toggle"
+          aria-pressed="false"
+          onclick="app.toggleBrownNoise()"
+        >
+          <span>🌊 Brown Noise Focus Anchor</span>
+          <span class="status-badge" id="noise-status-tunnel">OFF</span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         STATE 3: DOOM PILE UNPACKER (5-STEP WIZARD)
+         ========================================== -->
+    <section id="screen-doom" class="screen" aria-labelledby="doom-step-indicator">
+      <div class="session-topbar">
+        <span id="doom-step-indicator" class="step-pill">Category 1 of 5</span>
+        <button type="button" class="btn-ghost" onclick="app.finishEarly()">
+          <span>Stop &amp; Rest</span>
+        </button>
+      </div>
+
+      <div id="doom-dots" class="wizard-dots" aria-hidden="true">
+        <span class="wizard-dot current"></span>
+        <span class="wizard-dot"></span>
+        <span class="wizard-dot"></span>
+        <span class="wizard-dot"></span>
+        <span class="wizard-dot"></span>
+      </div>
+
+      <article class="task-card" aria-live="assertive">
+        <span id="doom-category-tag" class="task-tag">1. Trash Only</span>
+        <p id="doom-task-text" class="task-prompt">Trash only: bag it, ignore all else.</p>
+      </article>
+
+      <button type="button" id="doom-next-btn" class="btn btn-amber" onclick="app.nextDoomStep()">
+        <span>✓ Category Clear — Next</span>
+      </button>
+
+      <div class="utility-row">
+        <button
+          type="button"
+          id="brown-noise-btn-doom"
+          class="audio-toggle"
+          aria-pressed="false"
+          onclick="app.toggleBrownNoise()"
+        >
+          <span>🌊 Brown Noise Focus Anchor</span>
+          <span class="status-badge" id="noise-status-doom">OFF</span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         STATE 4: THE SOFT LANDING (COMPLETION)
+         ========================================== -->
+    <section id="screen-landing" class="screen" aria-labelledby="landing-heading">
+      <div class="completion-hero">
+        <div class="sparkle-badge" aria-hidden="true">✨</div>
+        <h1 id="landing-heading">Baseline Restored! ✨</h1>
+        <div id="landing-readout" class="stats-box">
+          You spent 2 minutes and cleared 3 micro-tasks.
+        </div>
+        <p class="affirmation-text">Your space is functional. Go relax guilt-free.</p>
+      </div>
+
+      <div id="rest-permission-banner" class="rest-toast" role="status">
+        🌿 Permission granted: Close this tab, grab water, and enjoy your rest.
+      </div>
+
+      <button type="button" class="btn btn-primary" onclick="app.celebrateRest()">
+        <span>I'm Done — Time to Rest</span>
+      </button>
+
+      <button type="button" class="btn btn-secondary" onclick="app.rideMomentum()">
+        <span>Ride the Momentum (+2 min more)</span>
+      </button>
+
+      <button type="button" class="btn-ghost" onclick="app.returnHome()">
+        <span>← Back to Energy Selector</span>
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    /**
+     * Web Audio Synthesizer (Zero External Assets)
+     * - Gentle Pentatonic Chime on task completion
+     * - Warm Brown Noise Generator (White noise through lowpass filter)
+     */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.isNoisePlaying = false;
+        this.noiseSource = null;
+        this.noiseGain = null;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playPentatonicChime(isFinal = false) {
+        try {
+          this.initContext();
+          const now = this.ctx.currentTime;
+          // C Major Pentatonic frequencies (C5, D5, E5, G5, A5, C6)
+          const notes = isFinal
+            ? [523.25, 659.25, 783.99, 1046.50]
+            : [523.25, 659.25, 783.99];
+
+          notes.forEach((freq, index) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + index * 0.09);
+
+            gain.gain.setValueAtTime(0.001, now + index * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.16, now + index * 0.09 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.09 + 0.65);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + index * 0.09);
+            osc.stop(now + index * 0.09 + 0.7);
+          });
+        } catch (e) {
+          // Fail silently if audio is blocked
+        }
+      }
+
+      toggleBrownNoise() {
+        this.initContext();
+        if (this.isNoisePlaying) {
+          this.stopBrownNoise();
+          return false;
+        } else {
+          this.startBrownNoise();
+          return true;
+        }
+      }
+
+      startBrownNoise() {
+        if (this.isNoisePlaying) return;
+        const bufferSize = this.ctx.sampleRate * 3;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+
+        // Generate white noise buffer
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        this.noiseSource = this.ctx.createBufferSource();
+        this.noiseSource.buffer = buffer;
+        this.noiseSource.loop = true;
+
+        // Lowpass filter cascade to sculpt soothing deep Brown Noise
+        const lowpass1 = this.ctx.createBiquadFilter();
+        lowpass1.type = 'lowpass';
+        lowpass1.frequency.setValueAtTime(280, this.ctx.currentTime);
+
+        const lowpass2 = this.ctx.createBiquadFilter();
+        lowpass2.type = 'lowpass';
+        lowpass2.frequency.setValueAtTime(520, this.ctx.currentTime);
+
+        this.noiseGain = this.ctx.createGain();
+        this.noiseGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+        this.noiseGain.gain.linearRampToValueAtTime(0.28, this.ctx.currentTime + 0.4);
+
+        this.noiseSource.connect(lowpass1);
+        lowpass1.connect(lowpass2);
+        lowpass2.connect(this.noiseGain);
+        this.noiseGain.connect(this.ctx.destination);
+
+        this.noiseSource.start(0);
+        this.isNoisePlaying = true;
+      }
+
+      stopBrownNoise() {
+        if (!this.isNoisePlaying || !this.noiseSource) return;
+        try {
+          const now = this.ctx.currentTime;
+          this.noiseGain.gain.setValueAtTime(this.noiseGain.gain.value, now);
+          this.noiseGain.gain.linearRampToValueAtTime(0.0001, now + 0.2);
+          setTimeout(() => {
+            if (this.noiseSource) {
+              try { this.noiseSource.stop(); } catch (err) {}
+              this.noiseSource.disconnect();
+              this.noiseSource = null;
+            }
+          }, 220);
+        } catch (e) {}
+        this.isNoisePlaying = false;
+      }
+    }
+
+    /**
+     * Task Bank — All prompts strictly under 10 words for Cognitive Ergonomics
+     */
+    const MODES = {
+      zombie: {
+        label: '2-Min Zombie Mode',
+        durationSeconds: 120,
+        totalSteps: 3,
+        tasks: [
+          "Toss 3 wrappers or trash into a bag.",
+          "Move stray mugs or glasses to the sink.",
+          "Throw dirty socks or clothes into the hamper.",
+          "Grab 3 pieces of desk trash and bin them.",
+          "Empty one small surface of obvious wrappers.",
+          "Put cap back on 2 open bottles or pens.",
+          "Drop dirty napkins or tissues into the trash."
+        ]
+      },
+      sprint: {
+        label: '5-Min Quick Sprint',
+        durationSeconds: 300,
+        totalSteps: 4,
+        tasks: [
+          "Clear everything off one nightstand or coffee table.",
+          "Group cords and chargers neatly on your desk.",
+          "Wipe one bare counter spot with a damp cloth.",
+          "Stack loose papers or mail into one neat pile.",
+          "Return 3 random items to their actual home.",
+          "Clear stray dishes off your primary workspace.",
+          "Toss expired flyers and junk mail into recycling."
+        ]
+      },
+      momentum: {
+        label: '10-Min Momentum',
+        durationSeconds: 600,
+        totalSteps: 5,
+        tasks: [
+          "Pull blankets up roughly over your bed.",
+          "Collect all floor laundry into one basket.",
+          "Clear the kitchen sink edge of clutter.",
+          "Take a trash bag and do a 60-second sweep.",
+          "Put away 5 clean items sitting out.",
+          "Line up shoes neatly near the doorway.",
+          "Fluff sofa pillows and fold one throw blanket.",
+          "Place stray toiletries back on the bathroom shelf."
+        ]
+      }
+    };
+
+    const DOOM_STEPS = [
+      {
+        tag: "Category 1: Trash",
+        prompt: "Trash only: bag it, ignore all else."
+      },
+      {
+        tag: "Category 2: Dishes",
+        prompt: "Dishes & cups: move to sink, don't wash."
+      },
+      {
+        tag: "Category 3: Laundry",
+        prompt: "Laundry: toss clothes into an open hamper."
+      },
+      {
+        tag: "Category 4: Easy Wins",
+        prompt: "Put away 3 items with a known home."
+      },
+      {
+        tag: "Category 5: Later Box",
+        prompt: "Put remaining items in a box and walk away."
+      }
+    ];
+
+    /**
+     * Main Application Controller
+     */
+    const app = {
+      sound: new SoundEngine(),
+      activeModeKey: 'zombie',
+      currentStep: 1,
+      totalSteps: 3,
+      usedTaskIndices: new Set(),
+      currentTaskIndex: 0,
+
+      // Timer state
+      totalDuration: 120,
+      remainingSeconds: 120,
+      timerInterval: null,
+      sessionStartTimestamp: null,
+
+      // Cumulative metrics for Soft Landing
+      completedTasksCount: 0,
+      accumulatedSeconds: 0,
+
+      // Doom Wizard index
+      doomIndex: 0,
+
+      showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => {
+          el.classList.remove('active');
+        });
+        const target = document.getElementById(screenId);
+        if (target) target.classList.add('active');
+      },
+
+      /* ---- STATE 2: TUNNEL VISION SESSION ---- */
+      startSession(modeKey, isMomentumExtension = false) {
+        this.activeModeKey = modeKey;
+        const mode = MODES[modeKey];
+
+        if (!isMomentumExtension) {
+          this.completedTasksCount = 0;
+          this.accumulatedSeconds = 0;
+        }
+
+        this.currentStep = 1;
+        this.totalSteps = mode.totalSteps;
+        this.totalDuration = mode.durationSeconds;
+        this.remainingSeconds = mode.durationSeconds;
+        this.usedTaskIndices.clear();
+        this.sessionStartTimestamp = Date.now();
+
+        document.getElementById('tunnel-mode-tag').textContent = mode.label;
+        document.getElementById('timer-label').textContent = 'Gentle Pace';
+        document.getElementById('rest-permission-banner').classList.remove('visible');
+
+        this.pickNextTask();
+        this.updateTunnelHeader();
+        this.updateTimerUI();
+        this.startTimer();
+        this.showScreen('screen-tunnel');
+      },
+
+      pickNextTask() {
+        const pool = MODES[this.activeModeKey].tasks;
+        if (this.usedTaskIndices.size >= pool.length) {
+          this.usedTaskIndices.clear();
+        }
+
+        let candidate = 0;
+        do {
+          candidate = Math.floor(Math.random() * pool.length);
+        } while (this.usedTaskIndices.has(candidate) && pool.length > 1);
+
+        this.usedTaskIndices.add(candidate);
+        this.currentTaskIndex = candidate;
+        document.getElementById('tunnel-task-text').textContent = pool[candidate];
+      },
+
+      updateTunnelHeader() {
+        document.getElementById('tunnel-step-indicator').textContent =
+          `Step ${this.currentStep} of ${this.totalSteps}`;
+      },
+
+      completeMicroTask() {
+        this.completedTasksCount += 1;
+
+        if (this.currentStep < this.totalSteps) {
+          this.sound.playPentatonicChime(false);
+          this.currentStep += 1;
+          this.updateTunnelHeader();
+          this.pickNextTask();
+        } else {
+          this.sound.playPentatonicChime(true);
+          this.transitionToLanding();
+        }
+      },
+
+      swapMicroTask() {
+        // Zero-guilt instant task swap
+        this.pickNextTask();
+      },
+
+      startTimer() {
+        this.stopTimer();
+        this.timerInterval = setInterval(() => {
+          if (this.remainingSeconds > 0) {
+            this.remainingSeconds -= 1;
+            this.updateTimerUI();
+          } else {
+            // Zero punitive mechanics when timer finishes: calm message
+            document.getElementById('timer-label').textContent = 'Bonus Time — No Rush';
+            clearInterval(this.timerInterval);
+          }
+        }, 1000);
+      },
+
+      stopTimer() {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+      },
+
+      updateTimerUI() {
+        const mins = String(Math.floor(this.remainingSeconds / 60)).padStart(2, '0');
+        const secs = String(this.remainingSeconds % 60).padStart(2, '0');
+        document.getElementById('timer-display').textContent = `${mins}:${secs}`;
+
+        const circumference = 471.24; // 2 * Math.PI * 75
+        const ratio = Math.max(0, this.remainingSeconds / this.totalDuration);
+        const offset = circumference * (1 - ratio);
+        const ring = document.getElementById('timer-ring');
+        if (ring) {
+          ring.style.strokeDashoffset = offset.toFixed(2);
+        }
+      },
+
+      /* ---- STATE 3: DOOM PILE WIZARD ---- */
+      startDoomWizard() {
+        this.stopTimer();
+        this.completedTasksCount = 0;
+        this.accumulatedSeconds = 0;
+        this.doomIndex = 0;
+        this.sessionStartTimestamp = Date.now();
+        document.getElementById('rest-permission-banner').classList.remove('visible');
+
+        this.renderDoomStep();
+        this.showScreen('screen-doom');
+      },
+
+      renderDoomStep() {
+        const stepObj = DOOM_STEPS[this.doomIndex];
+        document.getElementById('doom-step-indicator').textContent =
+          `Category ${this.doomIndex + 1} of 5`;
+        document.getElementById('doom-category-tag').textContent = stepObj.tag;
+        document.getElementById('doom-task-text').textContent = stepObj.prompt;
+
+        const nextBtn = document.getElementById('doom-next-btn');
+        nextBtn.innerHTML = this.doomIndex === DOOM_STEPS.length - 1
+          ? '<span>✓ Seal Later Box &amp; Finish</span>'
+          : '<span>✓ Category Clear — Next</span>';
+
+        const dots = document.querySelectorAll('#doom-dots .wizard-dot');
+        dots.forEach((dot, idx) => {
+          dot.className = 'wizard-dot';
+          if (idx < this.doomIndex) dot.classList.add('completed');
+          if (idx === this.doomIndex) dot.classList.add('current');
+        });
+      },
+
+      nextDoomStep() {
+        this.completedTasksCount += 1;
+        if (this.doomIndex < DOOM_STEPS.length - 1) {
+          this.sound.playPentatonicChime(false);
+          this.doomIndex += 1;
+          this.renderDoomStep();
+        } else {
+          this.sound.playPentatonicChime(true);
+          this.transitionToLanding();
+        }
+      },
+
+      /* ---- STATE 4: THE SOFT LANDING ---- */
+      finishEarly() {
+        // Stopping early is celebrated as a first-class success state
+        this.sound.playPentatonicChime(true);
+        this.transitionToLanding();
+      },
+
+      transitionToLanding() {
+        this.stopTimer();
+        this.sound.stopBrownNoise();
+        this.syncAudioButtons(false);
+
+        const elapsedSecs = this.sessionStartTimestamp
+          ? Math.max(1, Math.round((Date.now() - this.sessionStartTimestamp) / 1000))
+          : 60;
+
+        this.accumulatedSeconds += elapsedSecs;
+        const minutesSpent = Math.max(1, Math.round(this.accumulatedSeconds / 60));
+        const tasksCleared = Math.max(1, this.completedTasksCount);
+
+        const minLabel = minutesSpent === 1 ? '1 minute' : `${minutesSpent} minutes`;
+        const taskLabel = tasksCleared === 1 ? '1 micro-task' : `${tasksCleared} micro-tasks`;
+
+        document.getElementById('landing-readout').textContent =
+          `You spent ${minLabel} and cleared ${taskLabel}.`;
+
+        this.showScreen('screen-landing');
+      },
+
+      celebrateRest() {
+        this.sound.playPentatonicChime(true);
+        const banner = document.getElementById('rest-permission-banner');
+        banner.classList.add('visible');
+      },
+
+      rideMomentum() {
+        // Launch a +2 min bonus round while keeping cumulative stats
+        this.startSession('zombie', true);
+      },
+
+      returnHome() {
+        this.stopTimer();
+        this.sound.stopBrownNoise();
+        this.syncAudioButtons(false);
+        this.showScreen('screen-gate');
+      },
+
+      /* ---- AUDIO FOCUS ANCHOR ---- */
+      toggleBrownNoise() {
+        const isPlaying = this.sound.toggleBrownNoise();
+        this.syncAudioButtons(isPlaying);
+      },
+
+      syncAudioButtons(isPlaying) {
+        const btnIds = ['brown-noise-btn-tunnel', 'brown-noise-btn-doom'];
+        const badgeIds = ['noise-status-tunnel', 'noise-status-doom'];
+
+        btnIds.forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) btn.setAttribute('aria-pressed', String(isPlaying));
+        });
+
+        badgeIds.forEach(id => {
+          const badge = document.getElementById(id);
+          if (badge) badge.textContent = isPlaying ? 'ON' : 'OFF';
+        });
+      }
+    };
+  </script>
+</body>
+</html>
